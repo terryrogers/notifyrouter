@@ -10,7 +10,8 @@
 - Matches exact paths or wildcard paths such as `events.*.alert_key`.
 - Supports all/any condition groups and common text, number, existence, list, and regular-expression operators.
 - Builds Pushover titles and messages from static text, variables, and Pushover-supported HTML.
-- Provides an authenticated `/admin` page for settings, rule management, payload inspection, and recent event status.
+- Provides an authenticated `/admin` page for Pushover and SMTP settings, rule management, payload inspection, service health, and friendly event/log review.
+- Supports user-triggered Pushover and email tests, email fallback, profile settings, Gravatar or uploaded avatars, and password recovery through email or Pushover.
 - Preserves compatibility with the existing `/alarmid.php` webhook path as well as `/webhook`.
 - Encrypts Pushover credentials at rest with a deployment-only Fernet key.
 
@@ -46,4 +47,4 @@ Templates use `{{ dotted.path }}` placeholders. Payload-derived values are inser
 
 ## Status
 
-Version `0.1.0` is an initial tested implementation. Production deployment, reverse-proxy configuration, persistent storage, backups, and end-to-end Pushover delivery validation are environment-specific steps.
+Version `0.2.0` is the current native PHP release. Production secrets and runtime event data remain outside the public repository.

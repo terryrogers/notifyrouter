@@ -1,3 +1,3 @@
 <?php
 declare(strict_types=1);
-require dirname(__DIR__) . '/gateway.php';
+require dirname(__DIR__) . '/app.php';

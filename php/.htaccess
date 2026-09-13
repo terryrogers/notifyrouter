@@ -3,7 +3,7 @@ Options -Indexes
 <FilesMatch "\.(log|sqlite3|db|env)$">
   Require all denied
 </FilesMatch>
-RewriteRule ^admin/?$ gateway.php [L,QSA]
-RewriteRule ^admin/setup/?$ gateway.php [L,QSA]
-RewriteRule ^admin/inspect/?$ gateway.php [L,QSA]
-RewriteRule ^webhook$ gateway.php [L,QSA]
+RewriteRule ^admin/?$ app.php [L,QSA]
+RewriteRule ^admin/(setup|inspect|forgot|reset|settings)/?$ app.php [L,QSA]
+RewriteRule ^profile-image$ app.php [L,QSA]
+RewriteRule ^webhook$ app.php [L,QSA]
