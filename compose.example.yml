@@ -1,0 +1,14 @@
+services:
+  signal-gateway:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - /path/outside/repository/signal-gateway.env
+    volumes:
+      - signal-gateway-data:/data
+    ports:
+      - "127.0.0.1:8080:8080"
+
+volumes:
+  signal-gateway-data:
+

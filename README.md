@@ -22,6 +22,8 @@
 4. Generate the encryption key with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
 5. Start with `signal-gateway`; put it behind HTTPS and a trusted reverse proxy.
 
+For a container deployment, use `compose.example.yml` as the Portainer stack basis, keep the real environment file outside the repository, and proxy `/` to `127.0.0.1:8080` over HTTPS.
+
 Point UniFi at `https://alarm.example.com/webhook?token=YOUR_WEBHOOK_TOKEN` (or the compatible `/alarmid.php` path). The token must live only in the deployment environment, never in source control.
 
 ## Rule Example
@@ -43,4 +45,3 @@ Templates use `{{ dotted.path }}` placeholders. Payload-derived values are inser
 ## Status
 
 Version `0.1.0` is an initial tested implementation. Production deployment, reverse-proxy configuration, persistent storage, backups, and end-to-end Pushover delivery validation are environment-specific steps.
-
