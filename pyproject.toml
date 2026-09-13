@@ -1,0 +1,27 @@
+[project]
+name = "cloudhub-signal-gateway"
+version = "0.1.0"
+description = "Rules-driven UniFi webhook to Pushover gateway"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+  "Flask>=3.1,<4",
+  "cryptography>=45,<47",
+  "requests>=2.32,<3",
+  "waitress>=3.0,<4",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<10"]
+
+[project.scripts]
+signal-gateway = "signal_gateway.app:main"
+
+[build-system]
+requires = ["setuptools>=78"]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
