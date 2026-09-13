@@ -24,7 +24,9 @@
 
 For a container deployment, use `compose.example.yml` as the Portainer stack basis, keep the real environment file outside the repository, and proxy `/` to `127.0.0.1:8080` over HTTPS.
 
-Point UniFi at `https://alarm.example.com/webhook?token=YOUR_WEBHOOK_TOKEN` (or the compatible `/alarmid.php` path). The token must live only in the deployment environment, never in source control.
+The `php/` directory is the native Apache/PHP 8.3 deployment used by `alarm.example.com`. Its generated configuration and SQLite state live outside the document root at `/srv/www/.signal-gateway`; they must never be committed.
+
+Point UniFi at `http://alarm.example.com/webhook?token=YOUR_WEBHOOK_TOKEN` (or the compatible `/alarmid.php` path). The token must live only in the deployment environment, never in source control. HTTPS should be enabled at the reverse proxy before exposing administration beyond the trusted network.
 
 ## Rule Example
 
