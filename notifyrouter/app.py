@@ -13,12 +13,12 @@ from .store import Store
 
 
 def create_app(config=None):
-    app=Flask(__name__); app.config.update(SECRET_KEY=os.getenv("CSG_SECRET_KEY") or secrets.token_hex(32),MAX_CONTENT_LENGTH=1024*1024,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Strict",SESSION_COOKIE_SECURE=os.getenv("CSG_COOKIE_SECURE","1")=="1")
+    app=Flask(__name__); app.config.update(SECRET_KEY=os.getenv("NOTIFYROUTER_SECRET_KEY") or secrets.token_hex(32),MAX_CONTENT_LENGTH=1024*1024,SESSION_COOKIE_HTTPONLY=True,SESSION_COOKIE_SAMESITE="Strict",SESSION_COOKIE_SECURE=os.getenv("NOTIFYROUTER_COOKIE_SECURE","1")=="1")
     if config: app.config.update(config)
-    store=Store(app.config.get("DATABASE") or os.getenv("CSG_DATABASE","instance/signal-gateway.sqlite3")); store.init(); app.extensions["store"]=store
+    store=Store(app.config.get("DATABASE") or os.getenv("NOTIFYROUTER_DATABASE","instance/notifyrouter.sqlite3")); store.init(); app.extensions["store"]=store
 
     def cipher():
-        key=os.getenv("CSG_MASTER_KEY"); return Fernet(key.encode()) if key else None
+        key=os.getenv("NOTIFYROUTER_MASTER_KEY"); return Fernet(key.encode()) if key else None
     def encrypt(value):
         box=cipher(); return box.encrypt(value.encode()).decode() if box and value else ""
     def decrypt(value):
@@ -32,12 +32,12 @@ def create_app(config=None):
         return inner
 
     @app.get("/health")
-    def health(): return {"status":"ok","product":"CloudHub Signal Gateway"}
+    def health(): return {"status":"ok","product":"NotifyRouter"}
 
     @app.route("/admin/login",methods=["GET","POST"])
     def login():
         if request.method=="POST":
-            expected=os.getenv("CSG_ADMIN_PASSWORD_HASH","")
+            expected=os.getenv("NOTIFYROUTER_ADMIN_PASSWORD_HASH","")
             if expected and check_password_hash(expected,request.form.get("password","")):
                 session.clear(); session["admin"]=True; session["csrf"]=secrets.token_urlsafe(24); return redirect(url_for("admin"))
         return render_template("login.html")
@@ -58,7 +58,7 @@ def create_app(config=None):
     @admin_required
     def save_settings():
         if not csrf_ok(): abort(403)
-        current=store.settings(); values={"app_name":request.form.get("app_name","CloudHub Signal Gateway")}
+        current=store.settings(); values={"app_name":request.form.get("app_name","NotifyRouter")}
         for field in ("pushover_token","pushover_user"):
             if request.form.get(field): values[field]=encrypt(request.form[field])
             elif field in current: values[field]=current[field]
@@ -87,7 +87,7 @@ def create_app(config=None):
         variables,outputs=evaluate(payload,store.rules()); return jsonify({"variables":variables,"outputs":outputs})
 
     def accept_webhook():
-        token=os.getenv("CSG_WEBHOOK_TOKEN","")
+        token=os.getenv("NOTIFYROUTER_WEBHOOK_TOKEN","")
         supplied=request.headers.get("X-Signal-Gateway-Token") or request.args.get("token","")
         if token and not secrets.compare_digest(token,supplied): abort(401)
         payload=request.get_json(silent=False); variables,outputs=evaluate(payload,store.rules()); settings=store.settings(); statuses=[]
@@ -104,7 +104,7 @@ def create_app(config=None):
 
 def main():
     from waitress import serve
-    serve(create_app(),host=os.getenv("CSG_HOST","127.0.0.1"),port=int(os.getenv("CSG_PORT","8080")))
+    serve(create_app(),host=os.getenv("NOTIFYROUTER_HOST","127.0.0.1"),port=int(os.getenv("NOTIFYROUTER_PORT","8080")))
 
 
 if __name__ == "__main__": main()

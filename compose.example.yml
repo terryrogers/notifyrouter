@@ -1,14 +1,14 @@
 services:
-  signal-gateway:
+  notifyrouter:
     build: .
     restart: unless-stopped
     env_file:
-      - /path/outside/repository/signal-gateway.env
+      - /path/outside/repository/notifyrouter.env
     volumes:
-      - signal-gateway-data:/data
+      - notifyrouter-data:/data
     ports:
       - "127.0.0.1:8080:8080"
 
 volumes:
-  signal-gateway-data:
+  notifyrouter-data:
 

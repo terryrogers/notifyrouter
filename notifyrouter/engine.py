@@ -84,7 +84,7 @@ def evaluate(payload, rules):
         if rule_matches(rule, variables):
             outputs.append({
                 "rule": rule.get("name", "Unnamed Rule"),
-                "title": render(rule.get("title_template", "Signal Gateway"), variables),
+                "title": render(rule.get("title_template", "NotifyRouter"), variables),
                 "message": render(rule.get("message_template", ""), variables, rule.get("html", True)),
                 "html": bool(rule.get("html", True)),
                 "priority": int(rule.get("pushover_priority", 0)),

@@ -1,8 +1,8 @@
-from signal_gateway.app import create_app
+from notifyrouter.app import create_app
 
 
 def test_health_and_unconfigured_webhook(tmp_path, monkeypatch):
-    monkeypatch.setenv("CSG_WEBHOOK_TOKEN","test-token")
+    monkeypatch.setenv("NOTIFYROUTER_WEBHOOK_TOKEN","test-token")
     app=create_app({"TESTING":True,"DATABASE":str(tmp_path/"test.sqlite3"),"SESSION_COOKIE_SECURE":False})
     client=app.test_client()
     assert client.get("/health").json["status"]=="ok"

@@ -1,7 +1,7 @@
 [project]
-name = "cloudhub-signal-gateway"
-version = "0.2.0"
-description = "Rules-driven UniFi webhook to Pushover gateway"
+name = "notifyrouter"
+version = "0.3.0"
+description = "Rules-driven universal webhook notification gateway"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -16,7 +16,7 @@ dependencies = [
 test = ["pytest>=8,<10"]
 
 [project.scripts]
-signal-gateway = "signal_gateway.app:main"
+notifyrouter = "notifyrouter.app:main"
 
 [build-system]
 requires = ["setuptools>=78"]

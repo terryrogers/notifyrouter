@@ -1,8 +1,8 @@
-# CloudHub Signal Gateway
+# NotifyRouter
 
-![CloudHub Signal Gateway](signal_gateway/static/logo.png)
+![NotifyRouter](notifyrouter/static/logo.png)
 
-**Turn Events Into Action.** A self-hosted rules gateway that accepts UniFi Network Alarm Manager webhooks, exposes every JSON item as a template variable, and sends matched messages to Pushover.
+**Universal Notification Gateway.** A self-hosted rules engine that accepts arbitrary JSON webhooks, exposes every payload item as a template variable, and routes matched notifications to services such as Pushover and email.
 
 ## Capabilities
 
@@ -21,13 +21,13 @@
 2. Copy `.env.example` to a deployment-only environment file outside the repository and replace every placeholder.
 3. Generate the password hash with `python -c "from werkzeug.security import generate_password_hash; print(generate_password_hash(input('Password: ')))"`.
 4. Generate the encryption key with `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`.
-5. Start with `signal-gateway`; put it behind HTTPS and a trusted reverse proxy.
+5. Start with `notifyrouter`; put it behind HTTPS and a trusted reverse proxy.
 
 For a container deployment, use `compose.example.yml` as the Portainer stack basis, keep the real environment file outside the repository, and proxy `/` to `127.0.0.1:8080` over HTTPS.
 
-The `php/` directory is the native Apache/PHP 8.3 deployment used by `alarm.example.com`. Its generated configuration and SQLite state live outside the document root at `/srv/www/.signal-gateway`; they must never be committed.
+The `php/` directory is the native Apache/PHP deployment used by `notifyrouter.example.com`. Its generated configuration and SQLite state live outside the document root at `/srv/www/.notifyrouter`; they must never be committed.
 
-Point UniFi at `http://alarm.example.com/webhook?token=YOUR_WEBHOOK_TOKEN` (or the compatible `/alarmid.php` path). The token must live only in the deployment environment, never in source control. HTTPS should be enabled at the reverse proxy before exposing administration beyond the trusted network.
+Point a webhook source at `https://notifyrouter.example.com/webhook?token=YOUR_WEBHOOK_TOKEN` (or the compatible `/alarmid.php` path). The token must live only in the deployment environment, never in source control.
 
 ## Rule Example
 
@@ -40,11 +40,11 @@ Templates use `{{ dotted.path }}` placeholders. Payload-derived values are inser
 ## Security
 
 - Admin sessions use HTTP-only, same-site, secure cookies by default and CSRF tokens on every state-changing form.
-- The inbound webhook can require `CSG_WEBHOOK_TOKEN` through a header or query parameter.
+- The inbound webhook can require `NOTIFYROUTER_WEBHOOK_TOKEN` through a header or query parameter.
 - Request bodies are limited to 1 MiB.
 - `.env`, SQLite databases, virtual environments, caches, and bytecode are excluded from Git.
 - No live credentials, controller addresses, private payloads, or operational logs belong in this public repository.
 
 ## Status
 
-Version `0.2.0` is the current native PHP release. Production secrets and runtime event data remain outside the public repository.
+Version `0.3.0` introduces the provider-neutral NotifyRouter identity. Production secrets and runtime event data remain outside the public repository.

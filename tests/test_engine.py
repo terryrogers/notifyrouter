@@ -1,4 +1,4 @@
-from signal_gateway.engine import evaluate, flatten, render
+from notifyrouter.engine import evaluate, flatten, render
 
 
 PAYLOAD={"alarm_id":"a1","events":[{"alert_key":"CLIENT_CONNECTED","scope":{"site_id":"s1"}}]}
