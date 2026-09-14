@@ -1,9 +1,9 @@
 RewriteEngine On
 Options -Indexes
+DirectoryIndex index.php
 <FilesMatch "\.(log|sqlite3|db|env)$">
   Require all denied
 </FilesMatch>
-RewriteRule ^admin/?$ app.php [L,QSA]
 RewriteRule ^admin/(setup|inspect|forgot|reset|settings)/?$ app.php [L,QSA]
 RewriteRule ^profile-image$ app.php [L,QSA]
 RewriteRule ^webhook$ app.php [L,QSA]

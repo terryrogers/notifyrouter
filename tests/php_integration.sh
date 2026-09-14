@@ -16,35 +16,35 @@ cat > "$TEST_DIR/config.php" <<EOF
 <?php return ['database'=>'$TEST_DIR_PHP/app.sqlite3','master_key'=>'$KEY','webhook_token'=>'integration-webhook','setup_token'=>'integration-setup','event_log'=>'$TEST_DIR_PHP/events.ndjson'];
 EOF
 export NOTIFYROUTER_CONFIG="$TEST_DIR/config.php"
-php -S "127.0.0.1:$PORT" "$ROOT/php/app.php" >"$TEST_DIR/server.log" 2>&1 &
+php -S "127.0.0.1:$PORT" -t "$ROOT/php" >"$TEST_DIR/server.log" 2>&1 &
 SERVER_PID=$!
-i=0; while ! curl -sS "$BASE/admin" >/dev/null 2>&1; do i=$((i+1)); [ "$i" -lt 30 ] || { cat "$TEST_DIR/server.log"; exit 1; }; sleep 1; done
+i=0; while ! curl -sS "$BASE/" >/dev/null 2>&1; do i=$((i+1)); [ "$i" -lt 30 ] || { cat "$TEST_DIR/server.log"; exit 1; }; sleep 1; done
 
 status() { curl -sS -o "$TEST_DIR/body" -w '%{http_code}' "$@"; }
 expect_status() { expected=$1; shift; actual=$(status "$@"); [ "$actual" = "$expected" ] || { echo "Expected HTTP $expected, got $actual"; cat "$TEST_DIR/body"; exit 1; }; }
-csrf() { curl -sS -b "$COOKIE" "$BASE/admin" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -n 1; }
+csrf() { curl -sS -b "$COOKIE" "$BASE/" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -n 1; }
 db_value() { php -r 'define("NOTIFYROUTER_BOOTSTRAP_ONLY",true); require $argv[1]."/php/app.php"; echo db()->query($argv[2])->fetchColumn();' "$ROOT" "$1"; }
 
 expect_status 302 -X POST -c "$COOKIE" -d 'token=integration-setup&password=correct-horse-battery' "$BASE/admin/setup?token=integration-setup"
-expect_status 302 -X POST -b "$COOKIE" -c "$COOKIE" -d 'username=admin&password=correct-horse-battery' "$BASE/admin"
-expect_status 200 -b "$COOKIE" "$BASE/admin"; grep -Eq '/admin/settings[^<]*|Settings' "$TEST_DIR/body"; grep -q '/admin/administration' "$TEST_DIR/body"; grep -q 'class="nav-avatar"' "$TEST_DIR/body"
+expect_status 302 -X POST -b "$COOKIE" -c "$COOKIE" -d 'username=admin&password=correct-horse-battery' "$BASE/"
+expect_status 200 -b "$COOKIE" "$BASE/"; grep -Eq '/admin/settings[^<]*|Settings' "$TEST_DIR/body"; grep -q 'href="/admin">Administration' "$TEST_DIR/body"; grep -q 'class="nav-avatar"' "$TEST_DIR/body"
 TOKEN=$(csrf); [ -n "$TOKEN" ]
 
-expect_status 200 -b "$COOKIE" "$BASE/admin/administration/overview"; grep -q 'Overview' "$TEST_DIR/body"
-for section in users roles service-health destinations security email log; do expect_status 200 -b "$COOKIE" "$BASE/admin/administration/$section"; done
+expect_status 200 -b "$COOKIE" "$BASE/admin"; grep -q 'Overview' "$TEST_DIR/body"
+for section in users roles service-health destinations security email log; do expect_status 200 -b "$COOKIE" "$BASE/admin?section=$section"; done
 
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_role' --data-urlencode 'name=Operators' --data-urlencode 'permissions[]=Manage Inbound Rules' --data-urlencode 'permissions[]=View Recent Events' "$BASE/admin"
 ROLE_ID=$(db_value "SELECT id FROM roles WHERE name='Operators'"); [ -n "$ROLE_ID" ]
-expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_user' --data-urlencode 'username=operator' --data-urlencode 'full_name=Test Operator' --data-urlencode 'email=operator@example.test' --data-urlencode "role_id=$ROLE_ID" "$BASE/admin"
-expect_status 200 -b "$COOKIE" "$BASE/admin/administration/users"; grep -Eq '<code>[a-f0-9]{16}</code>' "$TEST_DIR/body"
+expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_user' --data-urlencode 'username=operator' --data-urlencode 'full_name=Test Operator' --data-urlencode 'email=operator@example.test' --data-urlencode "role_id=$ROLE_ID" "$BASE/admin?section=users"
+grep -Eq '<code>[a-f0-9]{16}</code>' "$TEST_DIR/body"
 USER_PASSWORD=$(sed -n 's/.*<code>\([a-f0-9]\{16\}\)<\/code>.*/\1/p' "$TEST_DIR/body" | head -n 1)
 USER_ID=$(db_value "SELECT id FROM users WHERE username='operator'"); [ -n "$USER_PASSWORD" ]; [ "$(db_value "SELECT enabled FROM users WHERE id=$USER_ID")" = 0 ]
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_user' --data-urlencode "id=$USER_ID" --data-urlencode 'username=operator' --data-urlencode 'full_name=Test Operator' --data-urlencode 'email=operator@example.test' --data-urlencode "role_id=$ROLE_ID" --data-urlencode 'enabled=1' "$BASE/admin"
 [ "$(db_value "SELECT enabled FROM users WHERE id=$USER_ID")" = 1 ]
 
 expect_status 302 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=logout' "$BASE/admin"
-expect_status 302 -X POST -c "$COOKIE" --data-urlencode 'username=operator' --data-urlencode "password=$USER_PASSWORD" "$BASE/admin"
-TOKEN=$(csrf); expect_status 403 -b "$COOKIE" "$BASE/admin/administration/overview"; expect_status 200 -b "$COOKIE" "$BASE/admin"
+expect_status 302 -X POST -c "$COOKIE" --data-urlencode 'username=operator' --data-urlencode "password=$USER_PASSWORD" "$BASE/"
+TOKEN=$(csrf); expect_status 403 -b "$COOKIE" "$BASE/admin"; expect_status 200 -b "$COOKIE" "$BASE/"
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=profile' --data-urlencode 'profile_email=operator2@example.test' --data-urlencode 'new_password=updated-password-123' "$BASE/admin/settings"
 [ "$(db_value "SELECT COUNT(*) FROM users WHERE id=$USER_ID AND email='operator2@example.test'")" = 1 ]
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=start_2fa' "$BASE/admin/settings"
@@ -55,9 +55,9 @@ expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-url
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=disable_2fa' "$BASE/admin/settings"
 [ "$(db_value "SELECT COUNT(*) FROM users WHERE id=$USER_ID AND two_factor_secret IS NULL")" = 1 ]
 expect_status 302 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=logout' "$BASE/admin"
-expect_status 302 -X POST -c "$COOKIE" --data-urlencode 'username=operator' --data-urlencode 'password=updated-password-123' "$BASE/admin"
+expect_status 302 -X POST -c "$COOKIE" --data-urlencode 'username=operator' --data-urlencode 'password=updated-password-123' "$BASE/"
 TOKEN=$(csrf); expect_status 302 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=logout' "$BASE/admin"
-expect_status 302 -X POST -c "$COOKIE" --data-urlencode 'username=admin' --data-urlencode 'password=correct-horse-battery' "$BASE/admin"; TOKEN=$(csrf)
+expect_status 302 -X POST -c "$COOKIE" --data-urlencode 'username=admin' --data-urlencode 'password=correct-horse-battery' "$BASE/"; TOKEN=$(csrf)
 
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_destination' --data-urlencode 'name=Disabled Test Destination' --data-urlencode 'description=Integration test' --data-urlencode 'type=pushover' "$BASE/admin"
 DEST_ID=$(db_value "SELECT id FROM destinations WHERE name='Disabled Test Destination'")

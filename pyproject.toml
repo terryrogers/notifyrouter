@@ -1,6 +1,6 @@
 [project]
 name = "notifyrouter"
-version = "0.4.1"
+version = "0.4.2"
 description = "Rules-driven universal webhook notification gateway"
 readme = "README.md"
 requires-python = ">=3.11"

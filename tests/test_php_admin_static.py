@@ -13,12 +13,19 @@ class AdministrationConsoleContractTests(unittest.TestCase):
         self.assertIn('semantic-ui-css@2.5.0', APP)
         self.assertTrue((ROOT / "php" / "assets" / "favicon.svg").is_file())
 
+    def test_release_identity_and_attribution_are_linked_safely(self):
+        self.assertIn("const NOTIFYROUTER_VERSION = '0.4.2'", APP)
+        self.assertIn("releases/tag/v0.4.2", APP)
+        self.assertIn('target="_blank" rel="noopener noreferrer">NotifyRouter</a>', APP)
+        self.assertIn('target="_blank" rel="noopener noreferrer">v\'.NOTIFYROUTER_VERSION', APP)
+        self.assertIn('target="_blank" rel="noopener noreferrer">Terry Rogers</a> © \'.date(\'Y\')', APP)
+
     def test_account_navigation_and_panels_resist_semantic_ui_regressions(self):
         self.assertIn("function can_access_administration()", APP)
         self.assertIn("function refresh_session_authorization()", APP)
         self.assertRegex(
             APP,
-            r'\/admin/settings.*Settings.*\/admin/administration.*Administration.*Sign Out',
+            r'\/admin/settings.*Settings.*href="\/admin">Administration.*Sign Out',
         )
         self.assertIn('class="nav-avatar"', APP)
         self.assertNotIn('class="avatar" src="<?=h(profile_url())?>"', APP)
@@ -32,6 +39,20 @@ class AdministrationConsoleContractTests(unittest.TestCase):
             "Destinations", "Security", "Email", "Log",
         ):
             self.assertIn(label, CONSOLE)
+
+    def test_production_entry_points_do_not_depend_on_rewrite_rules(self):
+        for entry_point in (
+            ROOT / "php" / "index.php",
+            ROOT / "php" / "admin" / "index.php",
+            ROOT / "php" / "admin" / "settings" / "index.php",
+            ROOT / "php" / "admin" / "forgot" / "index.php",
+            ROOT / "php" / "admin" / "reset" / "index.php",
+            ROOT / "php" / "admin" / "inspect" / "index.php",
+            ROOT / "php" / "profile-image" / "index.php",
+            ROOT / "php" / "webhook" / "index.php",
+        ):
+            self.assertTrue(entry_point.is_file(), str(entry_point))
+        self.assertNotIn("/admin/administration", APP + CONSOLE)
 
     def test_permissions_match_the_administration_contract(self):
         for permission in (
