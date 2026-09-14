@@ -11,7 +11,7 @@
 - Supports all/any condition groups and common text, number, existence, list, and regular-expression operators.
 - Builds Pushover titles and messages from static text, variables, and Pushover-supported HTML.
 - Provides an authenticated `/admin` page for Pushover and SMTP settings, rule management, payload inspection, service health, and friendly event/log review.
-- Provides a Semantic UI administration console for users, roles and permissions, service health, destinations, security, global email templates, and the system audit log.
+- Provides a Semantic UI administration console for general site settings, users, roles and permissions, service health, destinations, global email templates, and the system audit log.
 - Separates inbound matching rules, outbound message templates, and reusable Pushover or email destinations.
 - Includes built-in Administrator and User roles, optional enforced TOTP two-factor authentication, and auditable configuration changes.
 - Supports user-triggered Pushover and email tests, email fallback, profile settings, Gravatar or uploaded avatars, and password recovery through email or Pushover.
@@ -66,4 +66,4 @@ python -m pytest
 
 ## Status
 
-Version `0.4.2` serves the normal Rules & Outputs application at `/` and the Administration console at `/admin`, using production-safe physical PHP entry points rather than relying on nested URL rewriting. The HTTP regression suite now runs against the real document-root layout so missing production routes fail before release. It retains the Semantic UI interface, role-based access control, reusable destinations and outbound templates, service-health configuration, global email templates, audit logging, optional TOTP two-factor authentication, favicons, and the complete PHP release test suite. Production secrets and runtime event data remain outside the public repository.
+Version `0.5.0` removes the legacy password-only Administrator path and makes every administrator a normal database-backed user. Initial setup creates an enabled Administrator account, while Administration now includes a General page containing the Site Support User selector and global 2FA policy; the former Security page has been removed. The selected Site Support User cannot be disabled or deleted without first choosing a replacement. It retains the production-safe root and `/admin` routes, Semantic UI interface, role-based access control, reusable destinations and outbound templates, service-health configuration, global email templates, audit logging, optional TOTP two-factor authentication, favicons, and the complete PHP release test suite. Production secrets and runtime event data remain outside the public repository.

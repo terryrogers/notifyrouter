@@ -25,18 +25,20 @@ expect_status() { expected=$1; shift; actual=$(status "$@"); [ "$actual" = "$exp
 csrf() { curl -sS -b "$COOKIE" "$BASE/" | sed -n 's/.*name="csrf" value="\([^"]*\)".*/\1/p' | head -n 1; }
 db_value() { php -r 'define("NOTIFYROUTER_BOOTSTRAP_ONLY",true); require $argv[1]."/php/app.php"; echo db()->query($argv[2])->fetchColumn();' "$ROOT" "$1"; }
 
-expect_status 302 -X POST -c "$COOKIE" -d 'token=integration-setup&password=correct-horse-battery' "$BASE/admin/setup?token=integration-setup"
+expect_status 302 -X POST -c "$COOKIE" -d 'token=integration-setup&username=admin&full_name=Test Administrator&email=admin@example.test&password=correct-horse-battery' "$BASE/admin/setup?token=integration-setup"
+[ "$(db_value "SELECT COUNT(*) FROM settings WHERE key='admin_hash'")" = 0 ]
 expect_status 302 -X POST -b "$COOKIE" -c "$COOKIE" -d 'username=admin&password=correct-horse-battery' "$BASE/"
 expect_status 200 -b "$COOKIE" "$BASE/"; grep -Eq '/admin/settings[^<]*|Settings' "$TEST_DIR/body"; grep -q 'href="/admin">Administration' "$TEST_DIR/body"; grep -q 'class="nav-avatar"' "$TEST_DIR/body"
 TOKEN=$(csrf); [ -n "$TOKEN" ]
 
 expect_status 200 -b "$COOKIE" "$BASE/admin"; grep -q 'Overview' "$TEST_DIR/body"
-for section in users roles service-health destinations security email log; do expect_status 200 -b "$COOKIE" "$BASE/admin?section=$section"; done
+for section in general users roles service-health destinations email log; do expect_status 200 -b "$COOKIE" "$BASE/admin?section=$section"; done
+expect_status 404 -b "$COOKIE" "$BASE/admin?section=security"
 
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_role' --data-urlencode 'name=Operators' --data-urlencode 'permissions[]=Manage Inbound Rules' --data-urlencode 'permissions[]=View Recent Events' "$BASE/admin"
 ROLE_ID=$(db_value "SELECT id FROM roles WHERE name='Operators'"); [ -n "$ROLE_ID" ]
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_user' --data-urlencode 'username=operator' --data-urlencode 'full_name=Test Operator' --data-urlencode 'email=operator@example.test' --data-urlencode "role_id=$ROLE_ID" "$BASE/admin?section=users"
-grep -Eq '<code>[a-f0-9]{16}</code>' "$TEST_DIR/body"
+grep -Eq '<code>[a-f0-9]{16}</code>' "$TEST_DIR/body" || { echo 'Generated password was not displayed'; cat "$TEST_DIR/body"; exit 1; }
 USER_PASSWORD=$(sed -n 's/.*<code>\([a-f0-9]\{16\}\)<\/code>.*/\1/p' "$TEST_DIR/body" | head -n 1)
 USER_ID=$(db_value "SELECT id FROM users WHERE username='operator'"); [ -n "$USER_PASSWORD" ]; [ "$(db_value "SELECT enabled FROM users WHERE id=$USER_ID")" = 0 ]
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_user' --data-urlencode "id=$USER_ID" --data-urlencode 'username=operator' --data-urlencode 'full_name=Test Operator' --data-urlencode 'email=operator@example.test' --data-urlencode "role_id=$ROLE_ID" --data-urlencode 'enabled=1' "$BASE/admin"
@@ -75,10 +77,15 @@ expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-url
 [ "$(db_value "SELECT value FROM settings WHERE key='pushover_operational'")" = 0 ]
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=email_global' --data-urlencode 'smtp_host=smtp.example.test' --data-urlencode 'smtp_port=587' --data-urlencode 'smtp_security=starttls' --data-urlencode 'smtp_user=test-user' --data-urlencode 'smtp_from=notify@example.test' --data-urlencode 'smtp_from_name=NotifyRouter' --data-urlencode 'email_message_type=html' --data-urlencode 'email_footer=Footer' --data-urlencode 'welcome_subject=Welcome' --data-urlencode 'welcome_body=Hello {{ full_name }}' --data-urlencode 'reset_subject=Reset' --data-urlencode 'reset_body=Reset {{ reset_link }}' "$BASE/admin"
 [ "$(db_value "SELECT value FROM settings WHERE key='welcome_subject'")" = Welcome ]
-expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=security' --data-urlencode 'support_email=support@example.test' --data-urlencode 'enforce_2fa=1' "$BASE/admin"
+ADMIN_ID=$(db_value "SELECT id FROM users WHERE username='admin'")
+expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=general' --data-urlencode "site_support_user_id=$ADMIN_ID" --data-urlencode 'enforce_2fa=1' "$BASE/admin?section=general"
 [ "$(db_value "SELECT COALESCE((SELECT value FROM settings WHERE key='enforce_2fa'),'')")" != 1 ]
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_user' --data-urlencode "id=$USER_ID" --data-urlencode 'username=operator' --data-urlencode 'full_name=Test Operator' --data-urlencode 'email=operator2@example.test' --data-urlencode "role_id=$ROLE_ID" "$BASE/admin"
-expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=security' --data-urlencode 'support_email=support@example.test' --data-urlencode 'enforce_2fa=1' "$BASE/admin"; [ "$(db_value "SELECT value FROM settings WHERE key='enforce_2fa'")" = 1 ]
+php -r 'define("NOTIFYROUTER_BOOTSTRAP_ONLY",true); require $argv[1]."/php/app.php"; db()->prepare("UPDATE users SET two_factor_secret=? WHERE id=?")->execute([enc("JBSWY3DPEHPK3PXP"),(int)$argv[2]]);' "$ROOT" "$ADMIN_ID"
+expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=general' --data-urlencode "site_support_user_id=$ADMIN_ID" --data-urlencode 'enforce_2fa=1' "$BASE/admin?section=general"; [ "$(db_value "SELECT value FROM settings WHERE key='enforce_2fa'")" = 1 ]; [ "$(db_value "SELECT value FROM settings WHERE key='site_support_user_id'")" = "$ADMIN_ID" ]
+ADMIN_ROLE_ID=$(db_value "SELECT id FROM roles WHERE name='Administrator'")
+expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=save_user' --data-urlencode "id=$ADMIN_ID" --data-urlencode 'username=admin' --data-urlencode 'full_name=Test Administrator' --data-urlencode 'email=admin@example.test' --data-urlencode "role_id=$ADMIN_ROLE_ID" "$BASE/admin?section=users"
+[ "$(db_value "SELECT enabled FROM users WHERE id=$ADMIN_ID")" = 1 ]
 
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=test_pushover' "$BASE/admin"; grep -q 'not_configured' "$TEST_DIR/body"
 expect_status 200 -X POST -b "$COOKIE" --data-urlencode "csrf=$TOKEN" --data-urlencode 'action=email_global' --data-urlencode 'smtp_host=' --data-urlencode 'smtp_from=' "$BASE/admin"

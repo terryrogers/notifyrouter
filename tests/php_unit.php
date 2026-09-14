@@ -73,7 +73,10 @@ same(1,(int)$database->query('SELECT COUNT(*) FROM audit_log')->fetchColumn(),'A
 log_event(['status'=>'unit']);check(is_file($testDir.'/events.ndjson'),'Payload log created');same('unit',json_decode(trim((string)file_get_contents($testDir.'/events.ndjson')),true)['status'],'Payload log content');
 $_SESSION=['permissions'=>['View Recent Events']];check(can('View Recent Events'),'Granted permission');check(!can('Administrator'),'Denied permission');
 $_SESSION=['permissions'=>['Administrator']];check(can('Clear Payload Log'),'Administrator wildcard permission');
-$_SESSION=['legacy_admin'=>true];check(can('Administrator'),'Recovery administrator permission');
-$_SESSION=['admin'=>true];refresh_session_authorization();check(can_access_administration(),'Existing legacy administrator session authorization refresh');
+check(initial_administrator_required(),'Initial administrator required before user creation');
+$now=gmdate(DATE_ATOM);$database->prepare('INSERT INTO users(username,full_name,email,password_hash,role_id,enabled,created_at,updated_at)VALUES(?,?,?,?,?,1,?,?)')->execute(['unit-admin','Unit Administrator','unit-admin@example.test',password_hash('unit-password-123',PASSWORD_DEFAULT),$adminId,$now,$now]);$initialAdminId=(int)$database->lastInsertId();
+check(!initial_administrator_required(),'Enabled database administrator completes setup');
+same($initialAdminId,(int)eligible_site_support_user($initialAdminId)['id'],'Eligible Site Support User');
+$database->prepare('UPDATE users SET enabled=0 WHERE id=?')->execute([$initialAdminId]);same(false,eligible_site_support_user($initialAdminId),'Disabled Site Support User rejected');
 
 echo "PHP unit tests passed: {$passed} assertions\n";

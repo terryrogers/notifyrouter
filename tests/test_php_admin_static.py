@@ -14,8 +14,8 @@ class AdministrationConsoleContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "php" / "assets" / "favicon.svg").is_file())
 
     def test_release_identity_and_attribution_are_linked_safely(self):
-        self.assertIn("const NOTIFYROUTER_VERSION = '0.4.2'", APP)
-        self.assertIn("releases/tag/v0.4.2", APP)
+        self.assertIn("const NOTIFYROUTER_VERSION = '0.5.0'", APP)
+        self.assertIn("releases/tag/v0.5.0", APP)
         self.assertIn('target="_blank" rel="noopener noreferrer">NotifyRouter</a>', APP)
         self.assertIn('target="_blank" rel="noopener noreferrer">v\'.NOTIFYROUTER_VERSION', APP)
         self.assertIn('target="_blank" rel="noopener noreferrer">Terry Rogers</a> © \'.date(\'Y\')', APP)
@@ -35,10 +35,23 @@ class AdministrationConsoleContractTests(unittest.TestCase):
 
     def test_administration_navigation_contains_every_requested_section(self):
         for label in (
-            "Overview", "Users", "Roles & Permissions", "Service Health",
-            "Destinations", "Security", "Email", "Log",
+            "Overview", "General", "Users", "Roles & Permissions", "Service Health",
+            "Destinations", "Email", "Log",
         ):
             self.assertIn(label, CONSOLE)
+        self.assertNotIn("'security'=>'Security'", CONSOLE)
+        self.assertIn("Site Support User", CONSOLE)
+        self.assertIn('name="site_support_user_id"', CONSOLE)
+        self.assertIn('name="enforce_2fa"', CONSOLE)
+
+    def test_legacy_administrator_authentication_is_removed(self):
+        self.assertNotIn("legacy_admin", APP + CONSOLE)
+        self.assertNotIn("setting('admin_hash')", APP)
+        self.assertNotIn("setv('admin_hash'", APP)
+        self.assertNotIn("Legacy Administrator", APP + CONSOLE)
+        self.assertIn("DELETE FROM settings WHERE key='admin_hash'", APP)
+        self.assertIn("initial_administrator_required", APP)
+        self.assertIn("Initial administrator user created", APP)
 
     def test_production_entry_points_do_not_depend_on_rewrite_rules(self):
         for entry_point in (
