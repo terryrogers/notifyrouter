@@ -11,6 +11,9 @@
 - Supports all/any condition groups and common text, number, existence, list, and regular-expression operators.
 - Builds Pushover titles and messages from static text, variables, and Pushover-supported HTML.
 - Provides an authenticated `/admin` page for Pushover and SMTP settings, rule management, payload inspection, service health, and friendly event/log review.
+- Provides a Semantic UI administration console for users, roles and permissions, service health, destinations, security, global email templates, and the system audit log.
+- Separates inbound matching rules, outbound message templates, and reusable Pushover or email destinations.
+- Includes built-in Administrator and User roles, optional enforced TOTP two-factor authentication, and auditable configuration changes.
 - Supports user-triggered Pushover and email tests, email fallback, profile settings, Gravatar or uploaded avatars, and password recovery through email or Pushover.
 - Preserves compatibility with the existing `/alarmid.php` webhook path as well as `/webhook`.
 - Encrypts Pushover credentials at rest with a deployment-only Fernet key.
@@ -25,9 +28,9 @@
 
 For a container deployment, use `compose.example.yml` as the Portainer stack basis, keep the real environment file outside the repository, and proxy `/` to `127.0.0.1:8080` over HTTPS.
 
-The `php/` directory is the native Apache/PHP deployment used by `notifyrouter.example.com`. Its generated configuration and SQLite state live outside the document root at `/srv/www/.notifyrouter`; they must never be committed.
+The `php/` directory is the native Apache/PHP deployment. Its generated configuration and SQLite state live outside the document root in a private state directory; they must never be committed.
 
-Point a webhook source at `https://notifyrouter.example.com/webhook?token=YOUR_WEBHOOK_TOKEN` (or the compatible `/alarmid.php` path). The token must live only in the deployment environment, never in source control.
+Point a webhook source at `https://notify.example.com/webhook?token=YOUR_WEBHOOK_TOKEN` (or the compatible `/alarmid.php` path). The token must live only in the deployment environment, never in source control.
 
 ## Rule Example
 
@@ -45,6 +48,22 @@ Templates use `{{ dotted.path }}` placeholders. Payload-derived values are inser
 - `.env`, SQLite databases, virtual environments, caches, and bytecode are excluded from Git.
 - No live credentials, controller addresses, private payloads, or operational logs belong in this public repository.
 
+## Testing
+
+Run the complete PHP production-path suite on a host with PHP, SQLite, Sodium, cURL, and the `curl` command:
+
+```sh
+sh tests/run_all.sh
+```
+
+The suite uses disposable directories under `/tmp`, performs core unit tests and HTTP integration tests, and removes its test database, configuration, session cookies, and server process when finished. A successful full pass is required before deployment or publication.
+
+The Python reference implementation retains its separate test suite:
+
+```sh
+python -m pytest
+```
+
 ## Status
 
-Version `0.3.0` introduces the provider-neutral NotifyRouter identity. Production secrets and runtime event data remain outside the public repository.
+Version `0.4.0` adds the Semantic UI administration console, role-based access control, reusable destinations and outbound templates, service-health configuration, global email templates, audit logging, optional TOTP two-factor authentication, favicons, and the complete PHP release test suite. Production secrets and runtime event data remain outside the public repository.

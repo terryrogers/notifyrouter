@@ -1,10 +1,10 @@
 [project]
 name = "notifyrouter"
-version = "0.3.0"
+version = "0.4.0"
 description = "Rules-driven universal webhook notification gateway"
 readme = "README.md"
 requires-python = ">=3.11"
-license = {text = "MIT"}
+license = "MIT"
 dependencies = [
   "Flask>=3.1,<4",
   "cryptography>=45,<47",
@@ -21,6 +21,9 @@ notifyrouter = "notifyrouter.app:main"
 [build-system]
 requires = ["setuptools>=78"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["notifyrouter*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

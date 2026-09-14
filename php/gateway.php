@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-const NOTIFYROUTER_CONFIG='/srv/www/.notifyrouter/config.php';
+define('NOTIFYROUTER_CONFIG',getenv('NOTIFYROUTER_CONFIG')?:dirname(__DIR__).'/.notifyrouter/config.php');
 function cfg():array{$c=require NOTIFYROUTER_CONFIG;if(!is_array($c))throw new RuntimeException('Configuration unavailable');return$c;}
 function db():PDO{static$d;if($d)return$d;$d=new PDO('sqlite:'.cfg()['database'],null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION]);$d->exec('PRAGMA journal_mode=WAL;PRAGMA busy_timeout=5000');$d->exec("CREATE TABLE IF NOT EXISTS settings(key TEXT PRIMARY KEY,value TEXT NOT NULL);CREATE TABLE IF NOT EXISTS rules(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,enabled INTEGER NOT NULL DEFAULT 1,priority INTEGER NOT NULL DEFAULT 100,match_mode TEXT NOT NULL DEFAULT 'all',conditions TEXT NOT NULL DEFAULT '[]',title_template TEXT NOT NULL,message_template TEXT NOT NULL,html INTEGER NOT NULL DEFAULT 1,pushover_priority INTEGER NOT NULL DEFAULT 0,sound TEXT NOT NULL DEFAULT 'pushover',stop_processing INTEGER NOT NULL DEFAULT 0);CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT,received_at TEXT NOT NULL,payload TEXT NOT NULL,variables TEXT NOT NULL,matched_rules TEXT NOT NULL,status TEXT NOT NULL)");return$d;}
 function setting(string$k,string$x=''):string{$q=db()->prepare('SELECT value FROM settings WHERE key=?');$q->execute([$k]);$v=$q->fetchColumn();return$v===false?$x:(string)$v;}
