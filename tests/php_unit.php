@@ -74,5 +74,6 @@ log_event(['status'=>'unit']);check(is_file($testDir.'/events.ndjson'),'Payload 
 $_SESSION=['permissions'=>['View Recent Events']];check(can('View Recent Events'),'Granted permission');check(!can('Administrator'),'Denied permission');
 $_SESSION=['permissions'=>['Administrator']];check(can('Clear Payload Log'),'Administrator wildcard permission');
 $_SESSION=['legacy_admin'=>true];check(can('Administrator'),'Recovery administrator permission');
+$_SESSION=['admin'=>true];refresh_session_authorization();check(can_access_administration(),'Existing legacy administrator session authorization refresh');
 
 echo "PHP unit tests passed: {$passed} assertions\n";

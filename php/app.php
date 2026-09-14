@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-const NOTIFYROUTER_VERSION = '0.4.0';
+const NOTIFYROUTER_VERSION = '0.4.1';
 define('NOTIFYROUTER_CONFIG',getenv('NOTIFYROUTER_CONFIG')?:dirname(__DIR__).'/.notifyrouter/config.php');
 const NOTIFYROUTER_GITHUB = 'https://github.com/terryrogers/notifyrouter';
 const NOTIFYROUTER_AUTHOR = 'https://www.terryrogers.me';
@@ -69,6 +69,25 @@ function can(string $permission): bool {
     if(!empty($_SESSION['legacy_admin']))return true;
     $permissions=$_SESSION['permissions']??[];
     return in_array('Administrator',$permissions,true)||in_array($permission,$permissions,true);
+}
+
+function can_access_administration(): bool {
+    return can('Read-only Administrator') || can('Administrator');
+}
+
+function refresh_session_authorization(): void {
+    if(empty($_SESSION['admin']))return;
+    if(!empty($_SESSION['user_id'])){
+        $q=db()->prepare('SELECT u.enabled,u.full_name,u.role_id FROM users u WHERE u.id=? LIMIT 1');
+        $q->execute([(int)$_SESSION['user_id']]);$user=$q->fetch(PDO::FETCH_ASSOC);
+        if(!$user||!$user['enabled']){$_SESSION=[];session_destroy();return;}
+        $_SESSION['user_name']=$user['full_name'];
+        $_SESSION['permissions']=role_permissions((int)$user['role_id']);
+        return;
+    }
+    $_SESSION['legacy_admin']=true;
+    $_SESSION['user_name']='Administrator';
+    $_SESSION['permissions']=PERMISSIONS;
 }
 
 function require_permission(string $permission): void {
@@ -257,7 +276,7 @@ function profile_url(): string {
 }
 function page_start(string $title): void {
     echo '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'.h($title).'</title><link rel="icon" href="/assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui-css@2.5.0/semantic.min.css"><link rel="stylesheet" href="/assets/style.css"></head><body class="notifyrouter"><header class="ui borderless menu"><a href="/admin" class="header item brand-link"><img class="brand" src="/assets/logo.png" alt="NotifyRouter"></a>';
-    if(!empty($_SESSION['admin']))echo'<nav class="right menu header-nav"><a class="item" href="/admin">Rules &amp; Outputs</a><a class="item" href="/admin/settings">Settings</a>'.(can('Read-only Administrator')||can('Administrator')?'<a class="item" href="/admin/administration">Administration</a>':'').'<div class="item"><form method="post" action="/admin"><input type="hidden" name="csrf" value="'.h(csrf()).'"><input type="hidden" name="action" value="logout"><button class="ui secondary button">Sign Out</button></form></div></nav>';
+    if(!empty($_SESSION['admin']))echo'<nav class="right menu header-nav"><a class="item" href="/admin">Rules &amp; Outputs</a><a class="item settings-link" href="/admin/settings"><img class="nav-avatar" src="'.h(profile_url()).'" alt=""><span>Settings</span></a>'.(can_access_administration()?'<a class="item" href="/admin/administration">Administration</a>':'').'<div class="item"><form method="post" action="/admin"><input type="hidden" name="csrf" value="'.h(csrf()).'"><input type="hidden" name="action" value="logout"><button class="ui secondary button">Sign Out</button></form></div></nav>';
     echo'</header><main class="ui container">';
 }
 function page_end(): void {
@@ -286,7 +305,7 @@ if($path==='/alarmid.php'||$path==='/webhook'){
     http_response_code(202);echo json_encode(['accepted'=>true,'matched_rules'=>array_column($outputs,'rule'),'status'=>$status]);exit;
 }
 
-session_start_secure();$setup=setting('admin_hash')==='';
+session_start_secure();refresh_session_authorization();$setup=setting('admin_hash')==='';
 if($path==='/admin/setup'){
     $ok=$setup&&hash_equals(cfg()['setup_token'],(string)($_GET['token']??$_POST['token']??''));$error='';
     if($_SERVER['REQUEST_METHOD']==='POST'&&$ok){$password=(string)($_POST['password']??'');if(strlen($password)<12)$error='Use at least 12 characters.';else{setv('admin_hash',password_hash($password,PASSWORD_DEFAULT));header('Location:/admin');exit;}}
@@ -358,7 +377,7 @@ if($path===$adminPrefix||str_starts_with($path,$adminPrefix.'/')){
 $rules=db()->query('SELECT r.*,t.name template_name FROM rules r LEFT JOIN outbound_templates t ON t.id=r.template_id ORDER BY r.priority,r.id')->fetchAll(PDO::FETCH_ASSOC);$templates=db()->query('SELECT t.*,d.name destination_name,d.type destination_type FROM outbound_templates t LEFT JOIN destinations d ON d.id=t.destination_id ORDER BY t.name')->fetchAll(PDO::FETCH_ASSOC);$destinations=db()->query('SELECT id,name,type FROM destinations WHERE enabled=1 ORDER BY type,name')->fetchAll(PDO::FETCH_ASSOC);$events=can('View Recent Events')?db()->query('SELECT * FROM events ORDER BY id DESC LIMIT 50')->fetchAll(PDO::FETCH_ASSOC):[];$pushStatus=pushover_status();$mailStatus=smtp_probe();$logEntries=[];$log=cfg()['event_log']??dirname(NOTIFYROUTER_CONFIG).'/notifyrouter-events.ndjson';if(can('View Payload Log')&&is_file($log)){$lines=file($log,FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES)?:[];foreach(array_slice(array_reverse($lines),0,50)as$line){$item=json_decode($line,true);if(is_array($item))$logEntries[]=$item;}}
 page_start('NotifyRouter Admin');
 ?>
-<div class="top"><div><h1>Rules &amp; Outputs</h1><p>Match any incoming payload item and use it in a message template.</p></div><img class="avatar" src="<?=h(profile_url())?>" alt="Profile"></div>
+<div class="top"><div><h1>Rules &amp; Outputs</h1><p>Match any incoming payload item and use it in a message template.</p></div></div>
 <?php if($message):?><p class="notice"><?=h($message)?></p><?php endif;?>
 <?php if($path==='/admin/settings'):?>
 <section class="card"><h2>Profile Settings</h2><form method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="action" value="profile"><label>Email Address<input type="email" name="profile_email" value="<?=h(setting('profile_email'))?>" required></label><label>Profile Picture <span>JPEG, PNG, or WebP; defaults to Gravatar.</span><input type="file" name="profile_picture" accept="image/jpeg,image/png,image/webp"></label><label>New Password <span>Leave blank to keep the current password.</span><input type="password" name="new_password" minlength="12"></label><button>Save Profile</button></form></section><?php if(!empty($_SESSION['user_id'])):$q=db()->prepare('SELECT two_factor_secret FROM users WHERE id=?');$q->execute([(int)$_SESSION['user_id']]);$has2fa=(string)$q->fetchColumn()!=='';?><section class="card"><h2>Two-Factor Authentication</h2><p><?=$has2fa?'2FA is registered for this account.':'Register this account before an administrator enables global enforcement.'?></p><?php if(isset($_SESSION['pending_2fa_secret'])):?><div class="notice secret-once"><strong>Authenticator Secret</strong><code><?=h((string)$_SESSION['pending_2fa_secret'])?></code><span>Enter this secret in an authenticator app, then verify the current six-digit code.</span></div><form method="post"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="action" value="confirm_2fa"><label>Verification Code<input name="otp" inputmode="numeric" pattern="[0-9]{6}" required></label><button>Verify And Enable 2FA</button></form><?php elseif(!$has2fa):?><form method="post"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="action" value="start_2fa"><button>Start 2FA Registration</button></form><?php else:?><form method="post" onsubmit="return confirm('Disable 2FA for your account?')"><input type="hidden" name="csrf" value="<?=csrf()?>"><input type="hidden" name="action" value="disable_2fa"><button class="danger">Disable 2FA</button></form><?php endif;?></section><?php endif;?><p><a href="/admin">Back To Dashboard</a></p>

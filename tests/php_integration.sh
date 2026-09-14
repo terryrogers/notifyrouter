@@ -27,6 +27,7 @@ db_value() { php -r 'define("NOTIFYROUTER_BOOTSTRAP_ONLY",true); require $argv[1
 
 expect_status 302 -X POST -c "$COOKIE" -d 'token=integration-setup&password=correct-horse-battery' "$BASE/admin/setup?token=integration-setup"
 expect_status 302 -X POST -b "$COOKIE" -c "$COOKIE" -d 'username=admin&password=correct-horse-battery' "$BASE/admin"
+expect_status 200 -b "$COOKIE" "$BASE/admin"; grep -Eq '/admin/settings[^<]*|Settings' "$TEST_DIR/body"; grep -q '/admin/administration' "$TEST_DIR/body"; grep -q 'class="nav-avatar"' "$TEST_DIR/body"
 TOKEN=$(csrf); [ -n "$TOKEN" ]
 
 expect_status 200 -b "$COOKIE" "$BASE/admin/administration/overview"; grep -q 'Overview' "$TEST_DIR/body"

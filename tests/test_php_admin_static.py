@@ -13,6 +13,19 @@ class AdministrationConsoleContractTests(unittest.TestCase):
         self.assertIn('semantic-ui-css@2.5.0', APP)
         self.assertTrue((ROOT / "php" / "assets" / "favicon.svg").is_file())
 
+    def test_account_navigation_and_panels_resist_semantic_ui_regressions(self):
+        self.assertIn("function can_access_administration()", APP)
+        self.assertIn("function refresh_session_authorization()", APP)
+        self.assertRegex(
+            APP,
+            r'\/admin/settings.*Settings.*\/admin/administration.*Administration.*Sign Out',
+        )
+        self.assertIn('class="nav-avatar"', APP)
+        self.assertNotIn('class="avatar" src="<?=h(profile_url())?>"', APP)
+        stylesheet = (ROOT / "php" / "assets" / "style.css").read_text(encoding="utf-8")
+        self.assertIn(".ui.segment.card{display:block;width:100%;max-width:none", stylesheet)
+        self.assertIn(".ui.segment.card.narrow{max-width:440px", stylesheet)
+
     def test_administration_navigation_contains_every_requested_section(self):
         for label in (
             "Overview", "Users", "Roles & Permissions", "Service Health",

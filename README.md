@@ -66,4 +66,4 @@ python -m pytest
 
 ## Status
 
-Version `0.4.0` adds the Semantic UI administration console, role-based access control, reusable destinations and outbound templates, service-health configuration, global email templates, audit logging, optional TOTP two-factor authentication, favicons, and the complete PHP release test suite. Production secrets and runtime event data remain outside the public repository.
+Version `0.4.1` corrects the Semantic UI panel layout, places the profile image in account navigation, and upgrades existing administrator sessions to the current permission model. It retains the administration console, role-based access control, reusable destinations and outbound templates, service-health configuration, global email templates, audit logging, optional TOTP two-factor authentication, favicons, and the complete PHP release test suite. Production secrets and runtime event data remain outside the public repository.
