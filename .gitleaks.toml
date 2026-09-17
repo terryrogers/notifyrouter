@@ -1,0 +1,19 @@
+title = "Repository Secret Checks"
+minVersion = "v8.30.0"
+
+[extend]
+path = "security/gitleaks-portable.toml"
+
+# Add only narrowly reviewed project exceptions below. Bind each exception to
+# one exact synthetic value and one exact file. Never allowlist real secrets or
+# private publication identifiers.
+
+[[rules]]
+id = "portable-connection-string-password"
+
+[[rules.allowlists]]
+description = "Allow the two exact synthetic passwords used by the disposable PHP integration test."
+condition = "AND"
+paths = ['''^tests/php_integration[.]sh$''']
+regexTarget = "secret"
+regexes = ["^(?:correct-horse-battery|updated-password-123)$"]

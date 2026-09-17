@@ -7,3 +7,5 @@ instance/
 *.sqlite3
 *.db
 *.egg-info/
+
+/.tools/

@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-const NOTIFYROUTER_VERSION = '0.5.0';
+const NOTIFYROUTER_VERSION = '0.5.1';
 define('NOTIFYROUTER_CONFIG',getenv('NOTIFYROUTER_CONFIG')?:dirname(__DIR__).'/.notifyrouter/config.php');
 const NOTIFYROUTER_GITHUB = 'https://github.com/terryrogers/notifyrouter';
-const NOTIFYROUTER_RELEASE = 'https://github.com/terryrogers/notifyrouter/releases/tag/v0.5.0';
+const NOTIFYROUTER_RELEASE = 'https://github.com/terryrogers/notifyrouter/releases/tag/v0.5.1';
 const NOTIFYROUTER_AUTHOR = 'https://www.terryrogers.me';
 
 function cfg(): array {

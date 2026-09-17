@@ -66,4 +66,6 @@ python -m pytest
 
 ## Status
 
+Version `0.5.1` adds modular repository quality gates for secret scanning, Python, PHP, shell scripts, and documentation. Local pre-commit and pre-push hooks use the same portable secret policy as GitHub Actions, with an additional private publication-safety policy configured outside the repository.
+
 Version `0.5.0` removes the legacy password-only Administrator path and makes every administrator a normal database-backed user. Initial setup creates an enabled Administrator account, while Administration now includes a General page containing the Site Support User selector and global 2FA policy; the former Security page has been removed. The selected Site Support User cannot be disabled or deleted without first choosing a replacement. It retains the production-safe root and `/admin` routes, Semantic UI interface, role-based access control, reusable destinations and outbound templates, service-health configuration, global email templates, audit logging, optional TOTP two-factor authentication, favicons, and the complete PHP release test suite. Production secrets and runtime event data remain outside the public repository.

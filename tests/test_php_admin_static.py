@@ -14,8 +14,8 @@ class AdministrationConsoleContractTests(unittest.TestCase):
         self.assertTrue((ROOT / "php" / "assets" / "favicon.svg").is_file())
 
     def test_release_identity_and_attribution_are_linked_safely(self):
-        self.assertIn("const NOTIFYROUTER_VERSION = '0.5.0'", APP)
-        self.assertIn("releases/tag/v0.5.0", APP)
+        self.assertIn("const NOTIFYROUTER_VERSION = '0.5.1'", APP)
+        self.assertIn("releases/tag/v0.5.1", APP)
         self.assertIn('target="_blank" rel="noopener noreferrer">NotifyRouter</a>', APP)
         self.assertIn('target="_blank" rel="noopener noreferrer">v\'.NOTIFYROUTER_VERSION', APP)
         self.assertIn('target="_blank" rel="noopener noreferrer">Terry Rogers</a> © \'.date(\'Y\')', APP)
