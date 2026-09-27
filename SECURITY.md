@@ -10,7 +10,7 @@
 
 ## Reporting A Vulnerability
 
-Use the repository's **Security** tab to submit a private vulnerability report when that option is available. If it is unavailable, contact a repository maintainer through an existing authorized private channel and ask for a private reporting route.
+Use the repository's **Security** tab to submit a private vulnerability report when that option is available. If it is unavailable, email `support@cloudhub.digital` with the subject prefix `[SECURITY REPORT]`.
 
 Do not open a public issue, discussion, or pull request containing vulnerability details, credentials, personal data, internal infrastructure, sensitive reproduction data, or exploit material.
 
