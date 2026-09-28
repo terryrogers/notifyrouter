@@ -7,7 +7,7 @@ requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
   "Flask>=3.1,<4",
-  "cryptography>=45,<47",
+  "cryptography>=45,<51",
   "requests>=2.32,<3",
   "waitress>=3.0,<4",
 ]
