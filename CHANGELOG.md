@@ -10,6 +10,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 Changes in this section are available on the default branch but have not been
 promoted to a tagged release or production deployment.
 
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
+
 ### Added
 
 - Modular repository quality gates for Python, PHP, shell, documentation, and
@@ -30,6 +34,10 @@ promoted to a tagged release or production deployment.
   release, tag, or deployment.
 
 ## [0.5.0] - 2026-09-14
+
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
 
 ### Added
 
@@ -68,6 +76,10 @@ promoted to a tagged release or production deployment.
 
 ## [0.4.2] - 2026-09-14
 
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
+
 ### Added
 
 - Physical PHP entry points for the root application, Administration, profile
@@ -97,6 +109,10 @@ promoted to a tagged release or production deployment.
 
 ## [0.4.1] - 2026-09-14
 
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
+
 ### Added
 
 - Regression coverage for panel sizing, navigation order, profile placement,
@@ -120,6 +136,10 @@ promoted to a tagged release or production deployment.
 - Python regression suite passed with 11 tests.
 
 ## [0.4.0] - 2026-09-14
+
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
 
 ### Added
 
@@ -162,6 +182,10 @@ promoted to a tagged release or production deployment.
 This historical milestone was recorded in the repository before formal GitHub
 Release publication began.
 
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
+
 ### Added
 
 - Provider-neutral NotifyRouter product name, visual identity, and logo.
@@ -178,6 +202,10 @@ Release publication began.
 
 This historical milestone was recorded in the repository before formal GitHub
 Release publication began.
+
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
 
 ### Added
 
@@ -201,6 +229,10 @@ Release publication began.
 
 This historical milestone was recorded in the repository before formal GitHub
 Release publication began.
+
+### Changed
+
+- Refresh repository quality gates, add the approved licence decision metadata, & enforce managed-module drift checks.
 
 ### Added
 
